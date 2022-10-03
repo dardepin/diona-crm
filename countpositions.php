@@ -1,13 +1,12 @@
 <?php
 
-function search($db, $page, $lim, $begin, $name, $status)
+function search($db, $page, $lim, $begin, $name)
 {
-    $sel = 'SELECT COUNT(issue_id) AS total FROM issues INNER JOIN workers ON issues.worker_id = workers.worker_id WHERE issues.deleted = FALSE';
-    if ($status != '') $sel .= ' AND issues.status = \'' . $status . '\'';
-    if ($name != '') $sel .= ' AND workers.fullname ILIKE \'%' . $name . '%\'';
+    if($name != '') $sel = 'SELECT COUNT(*) AS total FROM pg_enum WHERE enumlabel ILIKE \'%' . $name . '%\' AND pg_enum.enumtypid = (SELECT oid FROM pg_type WHERE typname = \'positions\')';
+    else $sel = 'SELECT COUNT(*) AS total FROM pg_enum WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = \'positions\')';
 
     $res = pg_query($db, $sel);
-    if ($res)
+    if($res)
     {
         $records = pg_fetch_assoc($res);
         return $records['total'];
@@ -15,28 +14,28 @@ function search($db, $page, $lim, $begin, $name, $status)
     return 0;
 }
 
-function gettotal($db, $page, $lim, $name, $status)
+function gettotal($db, $page, $lim, $name)
 {
     $total = array();
 
     if($page < 0) $page = 0;
     $begin = $page * $lim;
+    $sel = 'SELECT COUNT(*) AS total FROM unnest(enum_range(NULL::positions))';
 
-    $sel = 'SELECT COUNT(issue_id) AS total FROM issues WHERE deleted = FALSE';
     $res = pg_query($db, $sel);
-    if($res)
     {
         $records = pg_fetch_assoc($res);
         $total[] = $records['total']; //всего записей
-        $total[] = search($db, $page, $lim, $begin, $name, $status); //найдено записей
-
+        $total[] = search($db, $page, $lim, $begin, $name);
         $pages = ceil($total[1] / $lim);
-        $total[] = ($pages == 0)?1:$pages; //найдено страниц
+        $total[] = ($pages == 0)?1:$pages;
         if($page > $total[2]) $page = $total[2];
         $total[] = $page + 1; //текущая страница
         
         echo json_encode($total);
     }
+
+    return;
 }
 
 require_once('connect.php');
@@ -50,16 +49,14 @@ if(isset($_SESSION['username']) && (time() - $_SESSION['timeout'] < 900))
 else
 {
     session_destroy();
-    header('Location: login.php?r=issues');
+    header('Location: login.php?r=positions');
     exit();
 }
 
 $p = isset($_POST['p']) && is_numeric($_POST['p']) ? $_POST['p']:0;
 $q = isset($_POST['q']) && is_numeric($_POST['q']) ? $_POST['q']:15;
-$n = isset($_POST['n']) ? $_POST['n'] : ''; // name
-$s = isset($_POST['s']) ? $_POST['s'] : ''; // status
-if($s == 'Все статусы') $s = '';
+if(isset($_POST['n'])) $n = $_POST['n']; else $n = '';
 
-gettotal($connection1, $p, $q, $n, $s);
+gettotal($connection1, $p, $q, $n);
 
 ?>

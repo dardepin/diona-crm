@@ -1,28 +1,28 @@
 <?php
-function worker_exists($db, $id, $name, $position, $phone, $email)
+function is_exists($db, $id, $name, $positions, $phone, $email)
 {
-    //вернет true, если уже есть такой работник
-    $sel = 'SELECT * FROM workers WHERE worker_id=\'' . $id . '\' AND fullname = \'' . $name . '\' AND current_position =  \'' . $position . '\' AND phone=\'' . $phone . '\' AND email=\'' . $email . '\'';
+    $sel = 'SELECT * FROM workers WHERE worker_id = \'' . $id . '\' AND fullname = \'' . $name . '\' AND current_positions =  \'{' . $positions . '}\' AND phone = \'' . $phone . '\' AND email = \'' . $email . '\'';
+
     $res = pg_query($db, $sel);
     if($res)
     {
         $total = pg_numrows($res);
-        if($total == 0) return TRUE;
-    } else echo "updworker: Ошибка БД #2: " . pg_last_error($db);
+        if($total != 0) return TRUE;
+    } else echo 'updworker: Ошибка БД #2: ' . pg_last_error($db);
     return FALSE;
 }
 
-function updworker($db, $id, $name, $position, $phone, $email)
+function updworker($db, $id, $name, $positions, $phone, $email)
 {
-    if(!worker_exists($db, $id, $name, $position, $phone, $email)) return;//ok
-    $upd = 'UPDATE workers SET fullname=\'' . $name . '\', current_position=\'' . $position .  '\', phone=\'' . $phone . '\', email=\'' . $email . '\' WHERE worker_id=\'' . $id . '\'';
+    if(is_exists($db, $id, $name, $positions, $phone, $email)) return;//ok
+    $upd = 'UPDATE workers SET fullname = \'' . $name . '\', current_positions = \'{' . $positions . '}\', phone = \'' . $phone . '\', email = \'' . $email .  '\' WHERE worker_id = \'' . $id . '\'';
 
     $res = pg_query($db, $upd);
-    if(!$res) echo "updworker: Ошибка БД #1: " . pg_last_error($db);
+    if(!$res) echo 'updworker: Ошибка БД #1: ' . pg_last_error($db);
     return;
 }
 
-require_once("connect.php");
+require_once('connect.php');
 session_start();
 
 if(isset($_SESSION['username']) && (time() - $_SESSION['timeout'] < 900))
@@ -39,15 +39,15 @@ else
 
 $phone = ''; $email = '';
 
-if(isset($_POST['name']) && isset($_POST['position'])  && isset($_POST['id']))
+if(isset($_POST['n']) && isset($_POST['p'])  && isset($_POST['i']))
 {
-    $id = $_POST['id'];
-    $name = $_POST['name'];
-    $position = $_POST['position'];
-    if(isset($_POST['phone'])) $phone = $_POST['phone'];
-    if(isset($_POST['email'])) $email = $_POST['email'];
+    $id = $_POST['i'];
+    $name = $_POST['n'];
+    $positions = $_POST['p'];
+    if(isset($_POST['t'])) $phone = $_POST['t'];
+    if(isset($_POST['e'])) $email = $_POST['e'];
 
-    updworker($connection1, $id, $name, $position, $phone, $email);
+    updworker($connection1, $id, $name, $positions, $phone, $email);
 } else echo 'updworker: Нет id, имени или должности';
 
 ?>

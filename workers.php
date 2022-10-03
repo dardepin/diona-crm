@@ -2,11 +2,9 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <?php include "./header.html";
+        <?php include './header.html';
 
         session_start();
-        require_once("connect.php");
-        $_POST['redir'] = 'workers.php';
 
         if(isset($_SESSION['username']) && (time() - $_SESSION['timeout'] < 900))
         {
@@ -20,7 +18,6 @@
             exit();
         }
         ?>
-
     </head>
 
     <body>
@@ -38,6 +35,9 @@
                         <li class="nav-item">
                             <a class="nav-link active" href="/workers.php">Персонал</a>
                         </li>
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/positions.php">Должности</a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link disabled" href="#">Еще что то</a>
                         </li>
@@ -53,39 +53,35 @@
 
         <br>
         <div class="container">
-            <div class="btn-toolbar mb-3" role="toolbar" aria-label="Controls">
-                <div class="btn-group">
-                    <input type="checkbox" class="btn-check" name="options" id="check1" autocomplete="off" checked onclick="search(1)">
-                    <label class="btn btn-outline-primary" for="check1">Сантехники</label>
-                        
-                    <input type="checkbox" class="btn-check" name="options" id="check2" autocomplete="off" checked onclick="search(1)">
-                    <label class="btn btn-outline-primary" for="check2">Электрики</label>
-
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="search-worker" onchange="search(1)" placeholder="Поиск по Ф.И.О." aria-label="Input group example" aria-describedby="btnGroupAddon">
-                    </div>
-                    <select class="form-control"  style="width:auto;" id="select-per-page" name="perpage" onchange="search(1)">
+            <div class="btn-toolbar mb-3" role="toolbar" aria-label="">
+                <div class="btn-group me-2" role="group" aria-label="">
+                    <select class="form-select form-select-sm" aria-label="Быстрый поиск по должности" onchange="workers(1)" id="select-search-position">
+                    </select>
+                    <select class="form-control"  style="width:auto;" id="select-per-page" name="perpage" onchange="workers(1)">
                         <option selected value=15>15</option>
                         <option value=30>30</option>
                         <option value=50>50</option>
                         <option value=100>100</option>
                     </select>
-                </div><!--- btn-group --->
-                <button type="button" class="btn btn-primary" id="add-worker-btn">Добавить сотрудника</button>
-            </div> <!--- btn-toolbar --->
+                </div> <!--- btn-group --->
+                <div class="input-group">
+                    <input type="text" class="form-control" id="search-worker" onchange="workers(1)" placeholder="Поиск по Ф.И.О." aria-label="" aria-describedby="btnGroupAddon">
+                    <button type="button" class="btn btn-primary" id="new-worker-btn">Добавить сотрудника</button>
+                </div>
+            </div> <!--- btn-toolbar -->
             <p class="workers-msg" id="workers-msg"></p>
 
             <nav aria-label="...">
-                <ul class="pagination pagination-sm justify-content-center" id="workers-pages">
-                </ul>
+                <ul class="pagination pagination-sm justify-content-center" id="workers-pages"></ul>
             </nav>
 
             <div id="workers-table"></div>
-        </div> <!--- container --->
+        </div><!--- container --->
 
-        <?php include "./footer.php" ?>
+        <?php include './footer.php' ?>
 
-        <!--- add-worker modal --->
+        <!--- modals --->
+        <!--- new-worker modal --->
         <div class="modal fade" id="new-worker-modal" role="dialog">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -97,13 +93,13 @@
                     <!--- контент окна ниже --->
                         <form role="form">
                             <div class="form-group">
-                                <label for="new-worker-fullname">Ф.И.О</label>
-                                <input type="text" class="form-control" id="new-worker-fullname" placeholder="Введите Ф.И.О." value = "" />
+                                <label for="new-worker-name">Ф.И.О</label>
+                                <input type="text" class="form-control" id="new-worker-name" placeholder="Введите Ф.И.О." value = "" />
                             </div>
                             <br>
                             <div class="form-group">
-                                <label for="new-worker-position">Должность</label>
-                                <select class="form-control" id="new-worker-position" name="positions"></select>
+                                <label for="new-worker-positions">Должности (можно выбрать несколько)</label>
+                                <select class="form-control" id="new-worker-positions" name="positions" multiple></select>
                             </div>
                             <br>
                             <div class="form-group">
@@ -114,20 +110,20 @@
                             <div class="form-group">
                                 <label for="new-worker-email">Почтовый ящик (не обязательно)</label>
                                 <input type="text" class="form-control" id="new-worker-email" placeholder="Введите адрес почты." value = "" />
-                            </div>       
+                            </div> 
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" id="new-worker-cancel-btn"data-bs-dismiss="modal">Отмена</button>
+                                <button type="button" class="btn btn-primary submitBtn" id="new-worker-submit-btn">Сохранить</button>
+                            </div>
+                            <p class="new-worker-msg" id="new-worker-msg"></p>
                         </form>
                     <!--- контент окна выше--->
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-bs-dismiss="modal">Отмена</button>
-                        <button type="button" class="btn btn-primary submitBtn" id="new-worker-submit-btn">Записать</button>
-                    </div>
-                    <p class="add-worker-msg" id="add-worker-msg"></p>
                 </div>
             </div>
         </div>
-            
-        <!--- del-worker modal --->
+
+        <!--- del-worker-modal --->
         <div class="modal fade" id="del-worker-modal" role="dialog">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -139,7 +135,7 @@
                     <!--- контент окна ниже --->
                         <form role="form">
                             <div class="form-group">
-                                <label for="del-worker-name">Ф.И.О. и должность</label>
+                                <label for="del-worker-name">Ф.И.О. и должности</label>
                                 <input type="hidden" class="form-control" id="del-worker-id" placeholder="0" value = "" readonly />
                                 <input type="text" class="form-control" id="del-worker-name" placeholder="Ф.И.О. работника" value = "" readonly />
                             </div>
@@ -147,7 +143,7 @@
                     <!--- контент окна выше--->
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-bs-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-default" id="del-worker-cancel-btn" data-bs-dismiss="modal">Отмена</button>
                         <button type="button" class="btn btn-primary submitBtn" id="del-worker-submit-btn">Удалить</button>
                     </div>
                     <p class="del-worker-msg" id="del-worker-msg"></p>
@@ -155,7 +151,7 @@
             </div>
         </div>
 
-        <!--- edit-worker modal --->
+        <!--- edit-worker-modal --->
         <div class="modal fade" id="edit-worker-modal" role="dialog">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -171,8 +167,8 @@
                                 <label for="edit-worker-name">Ф.И.О.</label>
                                 <input type="text" class="form-control" id="edit-worker-name" placeholder="Ф.И.О. работника" value = "" />
                                 <br>
-                                <label for="edit-worker-position">Должность</label>
-                                <select class="form-control" id="edit-worker-position" name="positions">
+                                <label for="edit-worker-position">Должности</label>
+                                <select class="form-control" id="edit-worker-positions" name="positions" multiple>
                                 </select>
                                 <br>
                                 <label for="edit-worker-phone">Телефон</label>
@@ -180,15 +176,13 @@
                                 <br>
                                 <label for="edit-worker-email">Электронная почта</label>
                                 <input type="text" class="form-control" id="edit-worker-email" placeholder="" value = "" />
-                                <br>
-                                <label for="edit-worker-date">Дата создания</label>
-                                <input type="text" class="form-control" id="edit-worker-date" placeholder="" value = "" readonly />
                             </div>
                         </form>
                     <!--- контент окна выше--->
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-bs-dismiss="modal">Закрыть</button>
+                        <button type="button" class="btn btn-default" data-bs-dismiss="modal" id="edit-worker-cancel-btn">Закрыть</button>
+                        <button type="button" class="btn btn-primary submitBtn" id="edit-worker-delete-btn">Удалить</button>
                         <button type="button" class="btn btn-primary submitBtn" id="edit-worker-submit-btn">Сохранить</button>
                     </div>
                     <p class="edit-worker-msg" id="edit-worker-msg"></p>
@@ -196,82 +190,279 @@
             </div>
         </div>
 
-        <!--- call worker modal --->
-        <div class="modal fade" id="call-worker-modal" role="dialog">
+        <!--- new-issue-modal --->
+        <div class="modal fade" id="new-issue-modal" role="dialog">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h4 class="modal-title">Оформить вызов на работника?</h4>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body" id="call-worker-modal-body">
+                    <div class="modal-body" id="new-issue-modal-body">
                     <!--- контент окна ниже --->
                         <form role="form">
                             <div class="form-group">
-                                <input type="hidden" class="form-control" id="call-worker-id" placeholder="0" value = "" readonly />
-                                <label for="call-worker-name">Ф.И.О. и должность</label>
-                                <input type="text" class="form-control" id="call-worker-name" placeholder="Ф.И.О. работника" value = "" readonly />
+                                <input type="hidden" class="form-control" id="new-issue-id" placeholder="0" value = "" readonly />
+                                <label for="new-issue-name">Ф.И.О. работника</label>
+                                <input type="text" class="form-control" id="new-issue-name" placeholder="Ф.И.О. работника" value = "" readonly />
                                 <br>
-                                <label for="call-worker-time">Время вызова</label><br>
-                                <input type="date" id="call-worker-time" name="call-worker-time" value="" min="" max="" required>
-                                <br><br>
-                                <label for="call-worker-place">Место вызова</label>
-                                <textarea class="form-control" id="call-worker-place" rows="1"></textarea>
+                                <label for="new-issue-position">Должность</label>
+                                <select class="form-control" id="new-issue-position" name="position">
+                                </select>
+                                <br>
+                                <label for="new-issue-time">Время вызова</label><br>
+                                <input type="date" id="new-issue-time" name="new-issue-time" value="" min="" max="" required>
+                                <br>
+                                <label for="new-issue-place">Место вызова</label>
+                                <textarea class="form-control" id="new-issue-place" rows="1"></textarea>
                                 <br>
                                 <label for="call-worker-text">Описание вызова</label>
-                                <textarea class="form-control" id="call-worker-text" rows="4"></textarea>
+                                <textarea class="form-control" id="new-issue-text" rows="4"></textarea>
                                 <br>
-                                <input type="checkbox" class="btn-check" name="options" id="urgent" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="urgent">Важно!</label>
+                                <input type="checkbox" class="btn-check" name="options" id="new-issue-urgent" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="new-issue-urgent">Важно!</label>
                             </div>
                         </form>
                     <!--- контент окна выше--->
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-bs-dismiss="modal">Закрыть</button>
-                        <button type="button" class="btn btn-primary submitBtn" id="call-worker-submit-btn">Создать</button>
+                        <button type="button" class="btn btn-primary submitBtn" id="new-issue-submit-btn">Создать</button>
                     </div>
-                    <p class="call-worker-msg" id="call-worker-msg"></p>
+                    <p class="new-issue-msg" id="new-issue-msg"></p>
                 </div>
             </div>
         </div>
+
     </body>
 
 <script>
-function pages(params) //для пагинации
+$(document).ready(function() // загружает список работников как только страница загрузится
 {
-    $.ajax({
+    var positions = getpositions('', '#workers-msg');
+    if(positions != '')
+    {
+        //append 'all' first
+        $('#select-search-position').append('<option value=Все должности>Все должности</option>');
+        for(p in positions) $('#select-search-position').append('<option value=' + positions[p] + '>' + positions[p] + '</option>');
+    }
+    else
+    {
+        $('#select-search-position').prop('disabled', 'disabled');
+        $('#new-worker-btn').prop('disabled', 'disabled');
+        return;
+    }
+    workers(1);
+});
+</script>
+
+<script>
+function getpositions(params, msg) // возвращает список позиций []
+{
+    var positions = '';
+
+    $.ajax ({
         async: false,
         type: 'POST',
-        url: 'countworkers.php',
+        url: 'getpositions.php',
         data: params,
         beforeSend: function()
         {
-            document.getElementById("workers-pages").innerHTML = "";
+            $(msg).html('');
         },
-        success: function(data) //всего, найдено, текущая страница, всего страниц
+        success: function(responce)
         {
-            if(data != '')
-            {
-                var total = JSON.parse(data);
-                var all = total[0]; var found = total[1];
-                var pages = total[2]; var page = total[3];
-                $('#workers-msg').html('<div class="alert alert-primary" role="alert">Всего: ' + all + ' работников, найдено: ' + found + ' работников, всего страниц: ' + pages + ', текущая страница: ' + page + '</div>');
-
-                for (let i = 1; i <= pages; i++)
-                {
-                    if(i === page) document.getElementById("workers-pages").innerHTML += "<li class=\"page-item active\" aria-current=\"page\"><span class=\"page-link\">" + i + "</span></li>";
-                    else document.getElementById("workers-pages").innerHTML += "<li onclick=\"search(this.id)\" class=\"page-item\" id=\"" + i + "\"><a class=\"page-link\" >" + i + "</a></li>";
-                }
-            }
-            else $('#workers-msg').html('<div class="alert alert-primary" role="alert">Нет работников</div>');
+            if (responce != '') positions = JSON.parse(responce);
+            else $(msg).html('<div class="alert alert-primary" role="alert">Нет должностей в справочнике</div>');
         },
         error: function(xhr, status, error)
         {
-            $('#workers-msg').html('<div class="alert alert-primary" role="alert">' + xhr.status + ' ' + xhr.statusText +'</div>');
+            $(msg).html('<div class="alert alert-primary" role="alert">' + xhr.status + ' ' + xhr.statusText +'</div>');
         }
     });
-    return;
+    return positions;
+}
+</script>
+
+<script>
+function getpages(params, msg) // получение страниц [всего, найдено, страниц, текущая страница]
+{
+    var pages = '';
+
+    $.ajax ({
+        async: false,
+        type: 'POST',
+        url: 'countworkers.php', // ничего не пишет, только возвращает количество в массиве
+        data: params,
+        beforeSend: function()
+        {
+            $(msg).html('');
+        },
+        success: function(responce)
+        {
+            if(responce != '') pages = JSON.parse(responce);
+        },
+        error: function(xhr, status, error)
+        {
+            $(msg).html('<div class="alert alert-primary" role="alert">' + xhr.status + ' ' + xhr.statusText +'</div>');
+        }
+    });
+    return pages;
+}
+</script>
+
+<script>
+function getworkers(params, msg) // возвращает список работников [[],[]]
+{
+    var workers = '';
+
+    $.ajax ({
+        async: false,
+        type: 'POST',
+        url: 'getworkers.php',
+        data: params,
+        beforeSend: function()
+        {
+            $(msg).html('');
+        },
+        success: function(responce)
+        {
+            if (responce != '') workers = JSON.parse(responce);
+        },
+        error: function(xhr, status, error)
+        {
+            $(msg).html('<div class="alert alert-primary" role="alert">' + xhr.status + ' ' + xhr.statusText +'</div>');
+        }
+    });
+    return workers;
+}
+</script>
+
+<script>
+function getworker(worker_id, msg) //получает информацию об одном работнике
+{
+    var worker;
+
+    $.ajax ({
+        async: false,
+        type: 'POST',
+        url: 'getworker.php', //возвращает значение, только при успехе
+        data: 'i=' + worker_id,
+        beforeSend: function()
+        {
+            $(msg).html('');
+        },
+        success: function(responce)
+        {
+            if(responce == '') $(msg).html('<div class="alert alert-primary" role="alert">Работник с таким id не найден</div>');
+            else worker = JSON.parse(responce);
+        },
+        error: function(xhr, status, error)
+        {
+            $(msg).html('<div class="alert alert-primary" role="alert">' + xhr.status + ' ' + xhr.statusText +'</div>');
+        }
+    });
+    return worker;
+}
+</script>
+
+<script>
+function delworker(params, msg) // удаляет работника, возвращает true при успехе. не перезагружает таблицу
+{
+    var deleted = false;
+
+    $.ajax ({
+        async: false,
+        type: 'POST',
+        url: 'delworker.php',
+        data: params,
+        beforeSend: function()
+        {
+            $(msg).html('');
+        },
+        success: function(responce)
+        {
+            if(responce != '') $(msg).html('<div class="alert alert-primary" role="alert">' + responce + '</div>');
+            else
+            {
+                $(msg).html('<div class="alert alert-primary" role="alert">Работник удален</div>');
+                deleted = true;
+            }
+        },
+        error: function(xhr, status, error)
+        {
+            $(msg).html('<div class="alert alert-primary" role="alert">' + xhr.status + ' ' + xhr.statusText +'</div>');
+        }
+    });
+    return deleted;
+}
+</script>
+
+<script>
+function workers(page) // поиск и отображение сотрудников по параметрам
+{
+    var n = document.getElementById('search-worker').value;
+    var q = $('#select-per-page').val();
+    var s = $('#select-search-position option:selected').text();
+
+    if(!Number.isInteger(page)) page = parseInt(page);
+    var params = 'p=' + (page - 1) + '&q=' + q;
+    if(n != '') params += '&n=' + n;
+    if(s != '') params += '&s=' + s;
+    console.log('getworker params: ' + params);
+
+    var pages = getpages(params, '#workers-msg');
+    var workers = getworkers(params, '#workers-msg');
+
+    if(pages == '') return;
+    document.getElementById('workers-pages').innerHTML = '';
+    document.getElementById('workers-table').innerHTML = '';
+
+    var allworkers = pages[0];
+    if(allworkers == 0)
+    {
+        $('#workers-msg').html('<div class="alert alert-primary" role="alert">Нет работников в справочнике</div>');
+        return;
+    }
+    var foundworkers = pages[1];
+    var totalpages = pages[2]; var currentpage = pages[3];
+    $('#workers-msg').html('<div class="alert alert-primary" role="alert">Всего: ' + allworkers + ' работников, отобрано: ' + foundworkers + ' работников, всего страниц: ' + totalpages + ', текущая страница: ' + currentpage + '</div>');
+
+    for (let i = 1; i <= totalpages; i++)
+    {
+        if(i === currentpage) document.getElementById('workers-pages').innerHTML += '<li class=\"page-item active\" aria-current=\"page\"><span class=\"page-link\">' + i + '</span></li>';
+        else document.getElementById('workers-pages').innerHTML += '<li onclick=\"workers(this.id)\" class=\"page-item\" id=\"' + i + '\"><a class=\"page-link\" >' + i + '</a></li>';
+    }
+
+    if(workers == '') return;
+    var table = '<table class=\"table table-hover\">' + 
+                '<thead class=\"thead-primary\"><tr class=\"table-primary\">' +
+                '<td scope=\"col\">Имя</td>' +
+                '<td scope=\"col\">Должности</td>' +
+                '<td scope=\"col\">Телефон</td>' +
+                '<td scope=\"col\">Электронная почта</td>' +
+                '<td scope=\"col\">Создать вызов</td>' +
+                '<td scope=\"col\">Редактировать</td>' +
+                '<td scope=\"col\">Удалить</td>' +
+                '</tr></thead><tbody>';
+    for (let i = 0; i < workers.length; i++)
+    {
+        var callbutton = '<td><button type=\"button\" class=\"btn btn-primary\" id=\"new-issue-btn\" data-bs-toggle=\"modal\"  data-bs-target=\"#new-issue-modal\" data-whatever=\"' + workers[i][0] + '\"><img class=\"img-responsive\" title=\"call\" src=\"img/call.svg\"/></button></td>';
+
+        var editbutton = '<td><button type=\"button\" class=\"btn btn-primary\" id=\"edit-worker-btn\" data-bs-toggle=\"modal\"  data-bs-target=\"#edit-worker-modal\" data-whatever=\"' + workers[i][0] + '\"><img class=\"img-responsive\" title=\"edit\" src=\"img/edit.svg\"/></button></td>';
+
+        var deletebutton  = '<td><button type=\"button\" class=\"btn btn-primary\" id=\"delete-worker-btn\" data-bs-toggle=\"modal\" data-bs-target=\"#del-worker-modal\" data-whatever=\"' + workers[i][0] + '\"><img class=\"img-responsive\" title=\"delete\" src=\"img/delete.svg\"/></button></td>';
+
+        table += '<tr>' +
+        '<td>' + workers[i][1] + '</td>' +
+        '<td>' + workers[i][2].replace(/"/g, '').replace(',', ' , ') + '</td>' +
+        '<td>' + workers[i][3] + '</td>' +
+        '<td>' + workers[i][4] + '</td>' +
+        callbutton + editbutton + deletebutton + '</tr>';
+    }
+    table += '</tbody></table><br><br>';
+    document.getElementById('workers-table').innerHTML = table;
+
 }
 </script>
 
@@ -294,208 +485,66 @@ function getdate() //возвращает ["текущая дата", "+ мес�
 </script>
 
 <script>
-function search(page) //поиск сотрудников по параметрам
-{
-    const name = $("#search-worker").val().trim();
-    var q = $('#select-per-page').val();
-        
-    if(!Number.isInteger(page))
-    {
-        console.log("Page incorrect: " + page + " " + typeof page);
-        page = parseInt(page);
-    }
-        
-    var params = "p=" + (page - 1);
-    params += '&q=' + q;
-    if(name != '') params += "&name=" + name;
-    if(document.getElementById('check1').checked) params += "&p1=true";
-    if(document.getElementById('check2').checked) params += "&p2=true";
-    console.log(params);
-
-    pages(params);
-
-    $.ajax ({
-        type: 'POST',
-        url: 'getworkers.php',
-        data: params,
-        beforeSend: function()
-        {
-            document.getElementById("workers-table").innerHTML = "";
-        },
-        success: function(data)
-        {
-            if(data == '\n') $('#workers-msg').html('<div class="alert alert-primary" role="alert">Нет работников</div>');
-            else
-            {
-                //display table
-                var workers = JSON.parse(data);
-                var table = "<table class=\"table table-hover\">" + 
-                "<thead class=\"thead-primary\"><tr class=\"table-primary\">" +
-                "<th scope=\"col\">#</th>" +
-                "<th scope=\"col\">Имя</th>" +
-                "<th scope=\"col\">Должность</th>" +
-                "<th scope=\"col\">Телефон</th>" +
-                "<th scope=\"col\">Электронная почта</th>" +
-                "<th scope=\"col\">Создать вызов</th>" +
-                "<th scope=\"col\">Редактировать</th>" +
-                "<th scope=\"col\">Удалить</th>" +
-                "</tr></thead><tbody>";
-                for (let i = 0; i < workers.length; i++)
-                {
-                    var callbutton = "<td><button type=\"button\" class=\"btn btn-primary\" id=\"call-worker-btn\" data-bs-toggle=\"modal\"  data-bs-target=\"#call-worker-modal\" data-whatever=\"" + workers[i][0] + "\"><img class=\"img-responsive\" title=\"call\" src=\"img/call.svg\"/></button></td>";
-
-                    var editbutton = "<td><button type=\"button\" class=\"btn btn-primary\" id=\"edit-worker-btn\" data-bs-toggle=\"modal\"  data-bs-target=\"#edit-worker-modal\" data-whatever=\"" + workers[i][0] + "\"><img class=\"img-responsive\" title=\"edit\" src=\"img/edit.svg\"/></button></td>";
-
-                    var deletebutton  = "<td><button type=\"button\" class=\"btn btn-primary\" id=\"delete-worker-btn\" data-bs-toggle=\"modal\" data-bs-target=\"#del-worker-modal\" data-whatever=\"" + workers[i][0] + "\"><img class=\"img-responsive\" title=\"delete\" src=\"img/delete.svg\"/></button></td>";
-                    
-                    table += "<tr><th scope=\"row\">" + workers[i][0] + "</th>" +
-                    "<td>" + workers[i][1] + "</td>" +
-                    "<td>" + workers[i][2] + "</td>" +
-                    "<td>" + workers[i][3] + "</td>" +
-                    "<td>" + workers[i][4] + "</td>" +
-                    callbutton + editbutton + deletebutton + "</tr>";
-                }
-                table += "</tbody></table><br><br>";
-                document.getElementById("workers-table").innerHTML = table;
-            }
-        },
-        error: function(xhr, status, error)
-        {
-            $('#workers-msg').html('<div class="alert alert-primary" role="alert">' + xhr.status + ' ' + xhr.statusText +'</div>');
-        }
-    });
-    return;
-}
-</script>
-
-<script>
-function getpositions(msg_id) //возвращает список должностей или пишет ошибку в поле
-{
-    var positions;
-
-    $.ajax({
-        async: false,
-        type: 'POST',
-        url: 'getpositions.php',
-        beforeSend: function()
-        {
-            $(msg_id).html("");
-        },
-        success: function(data)
-        {
-            positions = JSON.parse(data);
-                //console.log(positions);
-        },
-        error: function(xhr, status, error)
-        {
-            $(msg_id).html('<div class="alert alert-primary" role="alert">' + xhr.status + ' ' + xhr.statusText +'</div>');
-        }
-    });
-    return positions;
-}
-</script>
-
-<script>
-function getworker(worker_id, msg_id) //получает информацию об одном работнике
-{
-    var worker;
-
-    $.ajax ({
-        async: false,
-        type: 'POST',
-        url: 'getworker.php',
-        data: 'id=' + worker_id,
-        beforeSend: function()
-        {
-            $(msg_id).html('');
-        },
-        success: function(data)
-        {
-            if(data == '') $(msg_id).html('<div class="alert alert-primary" role="alert">Работник с таким id не найден</div>');
-            else worker = JSON.parse(data);
-        },
-        error: function(xhr, status, error)
-        {
-            $(msg_id).html('<div class="alert alert-primary" role="alert">' + xhr.status + ' ' + xhr.statusText +'</div>');
-        }
-    });
-    return worker;
-}
-</script>
-
-<script>
-$(document).ready(function() //загружает список работников как только страница загрузится
-{
-    search(1);
-});
-</script>
-
-<script>
-$("#add-worker-btn").click(function() //при нажатии на кнопку "добавить работника"
+$('#new-worker-btn').click(function() // при нажатии на кнопку "добавить работника"
 {
     var new_worker_modal = new bootstrap.Modal(document.getElementById('new-worker-modal'));
-    new_worker_modal.show();
+    var positions = getpositions('', '#new-worker-msg');
+    
+    $('#new-worker-positions').empty();
+    if(positions == '') $('#new-worker-submit-btn').prop('disabled', 'disabled');
+    else for(p in positions) $('#new-worker-positions').append('<option value=' + positions[p] + '>' + positions[p] + '</option>');
 
-    $('#new-worker-submit-btn').attr("disabled","disabled");
-    $('#new-worker-modal-body').css('opacity', '.5');
-    $("#new-worker-position").empty();
-    var positions = getpositions('#add-worker-msg');
-    if(positions != '')
-    {
-        for(p in positions) 
-            $("#new-worker-position").append("<option value=" + positions[p] + ">" + positions[p] + "</option>");
-    }
-    $('#new-worker-submit-btn').removeAttr("disabled");
-    $('#new-worker-modal-body').css('opacity', '');
+    new_worker_modal.show();
 });
 </script>
 
 <script>
 $('#new-worker-submit-btn').click(function() //добавляет работника в бд, перезагружает таблицу, если ок
 {
-    const fullname = typeof $("#new-worker-fullname").val() === 'string' ? $("#new-worker-fullname").val().trim() : '';
-    const position = typeof $("#new-worker-position").val() === 'string' ? $("#new-worker-position").val().trim() : '';
-    const phone = typeof $("#new-worker-phone").val() === 'string' ? $("#new-worker-phone").val().trim() : '';
-    const email = typeof $("#new-worker-email").val() === 'string' ? $("#new-worker-email").val().trim() : '';
+    const name = typeof $('#new-worker-name').val() === 'string' ? $('#new-worker-name').val().trim() : '';
+    var positions = $('#new-worker-positions option:selected').toArray().map(item => item.text).join();
+    const phone = typeof $('#new-worker-phone').val() === 'string' ? $('#new-worker-phone').val().trim() : '';
+    const email = typeof $('#new-worker-email').val() === 'string' ? $('#new-worker-email').val().trim() : '';
 
-    if(fullname == '')
+    if(name == '')
     {
-        $('#add-worker-msg').html('<div class="alert alert-primary" role="alert">Введите Ф.И.О. обязательно</div>');
+        $('#new-worker-msg').html('<div class="alert alert-primary" role="alert">Введите Ф.И.О. обязательно</div>');
+        return false;
+    }
+    if(positions == '')
+    {
+        $('#new-worker-msg').html('<div class="alert alert-primary" role="alert">Выберите должность обязательно</div>');
         return false;
     }
 
-    if(position == '')
-    {
-        $('#add-worker-msg').html('<div class="alert alert-primary" role="alert">Выберите должность обязательно</div>');
-        return false;
-    }
+    var params = 'n=' + name + '&p=' + positions;
+    if(phone != '') params += '&t=' + encodeURIComponent(phone);
+    if(email != '') params += '&e=' + encodeURIComponent(email);
+    console.log('newworker params: ' + params);
 
-    var params = 'name=' + fullname + '&position=' + position;
-    if(phone != '') params += "&phone=" + encodeURIComponent(phone);
-    if(email != '') params += "&email=" + encodeURIComponent(email);
-
-    $.ajax({
+    $.ajax ({
         type: 'POST',
-        url: 'setworker.php',
+        url: 'newworker.php',
         data: params,
         beforeSend: function()
         {
-            $('#new-worker-submit-btn').attr("disabled","disabled");
+            $('#new-worker-submit-btn').attr('disabled','disabled');
             $('#new-worker-modal-body').css('opacity', '.5');
-            $("#add-worker-msg").html("");
+            $('#new-worker-msg').html('');
         },
-        success: function(data)
+        success: function(responce)
         {
-            if(data != '') $("#add-worker-msg").html('<div class="alert alert-primary" role="alert">' + data +'</div>');
-            $('#new-worker-submit-btn').removeAttr("disabled");
+            if(responce != '') $('#new-worker-msg').html('<div class="alert alert-primary" role="alert">' + responce +'</div>');
+            $('#new-worker-submit-btn').removeAttr('disabled');
             $('#new-worker-modal-body').css('opacity', '');
-            search(1);
+            workers(1);
+            //$('#new-worker-modal').modal('hide');
         },
         error: function(xhr, status, error)
         {
-            $('#new-worker-submit-btn').removeAttr("disabled");
+            $('#new-worker-submit-btn').removeAttr('disabled');
             $('#new-worker-modal-body').css('opacity', '');
-            $('#add-worker-msg').html('<div class="alert alert-primary" role="alert">' + xhr.status + ' ' + xhr.statusText +'</div>');
+            $('#new-worker-msg').html('<div class="alert alert-primary" role="alert">' + xhr.status + ' ' + xhr.statusText +'</div>');
         }
     });
 });
@@ -509,38 +558,16 @@ $(document).ready(function() //для вставки информации в ф�
         var worker_id = $(e.relatedTarget).data('whatever');
         $(e.currentTarget).find('input[id="del-worker-id"]').val(worker_id);
 
-        $('#del-worker-submit-btn').attr("disabled","disabled");
+        $('#del-worker-submit-btn').attr('disabled','disabled');
         $('#del-worker-modal-body').css('opacity', '.5');
 
         var worker = getworker(worker_id, '#del-worker-msg');
-        if(worker != '') $(e.currentTarget).find('input[id="del-worker-name"]').val(worker[0] + ' ' + worker[1]);
+        if(worker == '') return;
 
-        $('#del-worker-submit-btn').removeAttr("disabled");
+        $(e.currentTarget).find('input[id="del-worker-name"]').val(worker[0] + ': ' + worker[1]);
+
+        $('#del-worker-submit-btn').removeAttr('disabled');
         $('#del-worker-modal-body').css('opacity', '');
-    });
-});
-</script>
-
-<script>
-$(document).ready(function() //для вставки информации в форму вызова работника
-{
-    $('#call-worker-modal').on('show.bs.modal', function(e)
-    {
-        var worker_id = $(e.relatedTarget).data('whatever');
-        $(e.currentTarget).find('input[id="call-worker-id"]').val(worker_id);
-
-        $('#call-worker-submit-btn').attr("disabled","disabled");
-        $('#call-worker-modal-body').css('opacity', '.5');
-
-        var worker = getworker(worker_id, '#call-worker-msg');
-        if(worker != '') $(e.currentTarget).find('input[id="call-worker-name"]').val(worker[0] + ' ' + worker[1]);
-
-        var curr_date = getdate();
-        const call_time = document.querySelector('input[type="date"]');
-        call_time.value = curr_date[0]; call_time.min = curr_date[0]; call_time.max = curr_date[1];
-
-        $('#call-worker-submit-btn').removeAttr("disabled");
-        $('#call-worker-modal-body').css('opacity', '');
     });
 });
 </script>
@@ -548,71 +575,53 @@ $(document).ready(function() //для вставки информации в ф�
 <script>
 $('#del-worker-submit-btn').click(function(e) //подтвердить удаление работника
 {
-    var worker_id = document.getElementById("del-worker-id").value;
-
-    $.ajax ({
-        type: 'POST',
-        url: 'delworker.php',
-        data: 'id=' + worker_id,
-        beforeSend: function()
-        {
-            $('#del-worker-submit-btn').attr("disabled","disabled");
-            $('#del-worker-modal-body').css('opacity', '.5');
-            $("#del-worker-msg").html("");
-        },
-        success: function(data)
-        {
-            $('#del-worker-submit-btn').removeAttr("disabled");
-            $('#del-worker-modal-body').css('opacity', '');
-            if(data == '')
-            {
-                $('#del-worker-msg').html('<div class="alert alert-primary" role="alert">Работник #' + worker_id + ' удален</div>');
-                search(1);
-            }
-            else $('#del-worker-msg').html('<div class="alert alert-primary" role="alert">' + data +'</div>');
-        },
-        error: function(xhr, status, error)
-        {
-            $('#del-worker-submit-btn').removeAttr("disabled");
-            $('#del-worker-modal-body').css('opacity', '');
-            $('#del-worker-msg').html('<div class="alert alert-primary" role="alert">' + xhr.status + ' ' + xhr.statusText +'</div>');
-        }
-    });
+    var worker_id = document.getElementById('del-worker-id').value;
+    $('#del-worker-submit-btn').attr('disabled','disabled');
+    $('#del-worker-modal-body').css('opacity', '.5');
+    if(delworker('i=' + worker_id, '#del-worker-msg'))
+    {
+        document.querySelector('#del-worker-cancel-btn').innerText = 'Закрыть';
+        $('#del-worker-modal-body').css('opacity', '');
+        workers(1);
+    }
 });
 </script>
 
 <script>
-$(document).ready(function() //для вставки информации в форму редактирования работника
+$(document).ready(function() //для вставки информации в форму просмотра работника
 {
     $('#edit-worker-modal').on('show.bs.modal', function(e)
     {
         var worker_id = $(e.relatedTarget).data('whatever');
         $(e.currentTarget).find('input[id="edit-worker-id"]').val(worker_id);
 
-        $('#edit-worker-submit-btn').attr("disabled","disabled");
+        $('#edit-worker-submit-btn').attr('disabled','disabled');
+        $('#edit-worker-delete-btn').attr('disabled','disabled');
         $('#edit-worker-modal-body').css('opacity', '.5');
-        $("#edit-worker-position").empty();
+        $('#edit-worker-positions').empty();
 
         var worker = getworker(worker_id, '#edit-worker-msg');
-        var positions = getpositions('#edit-worker-msg');
+        if(worker == '') return;
+        var positions = getpositions('', '#edit-worker-msg');
+        if(positions == '') return;
 
-        if(worker != '' && positions != '')
+        $(e.currentTarget).find('input[id="edit-worker-name"]').val(worker[0]);
+        if(worker[2] != '') $(e.currentTarget).find('input[id="edit-worker-phone"]').val(worker[2]);
+        if(worker[3] != '') $(e.currentTarget).find('input[id="edit-worker-email"]').val(worker[3]);
+
+        //positions
+        var worker_positions = worker[1].split(', ');
+        /*console.log('workers positions: ' + worker_positions); //["Сантехник", "Электрик"]
+        console.log('all positions: ' + positions);*/
+
+        for(p in positions)
         {
-            $(e.currentTarget).find('input[id="edit-worker-name"]').val(worker[0]);
-            worker_position = worker[1];
-            $(e.currentTarget).find('input[id="edit-worker-phone"]').val(worker[2]);
-            $(e.currentTarget).find('input[id="edit-worker-email"]').val(worker[3]);
-            $(e.currentTarget).find('input[id="edit-worker-date"]').val(worker[4]);
-
-            for(p in positions)
-            {
-                if(worker_position === positions[p]) 
-                $("#edit-worker-position").append("<option value=" + positions[p] + " selected>" + positions[p] + "</option>");
-                else $("#edit-worker-position").append("<option value=" + positions[p] + ">" + positions[p] + "</option>");
-            }
+            if(worker_positions.includes(positions[p])) $('#edit-worker-positions').append('<option value=' + positions[p] + ' selected>' + positions[p] + '</option>');
+            else $('#edit-worker-positions').append('<option value=' + positions[p] + '>' + positions[p] + '</option>');
         }
 
-        $('#edit-worker-submit-btn').removeAttr("disabled");
+        $('#edit-worker-submit-btn').removeAttr('disabled');
+        $('#edit-worker-delete-btn').removeAttr('disabled');
         $('#edit-worker-modal-body').css('opacity', '');
     });
 });
@@ -621,31 +630,31 @@ $(document).ready(function() //для вставки информации в ф�
 <script>
 $('#edit-worker-submit-btn').click(function(e) //подтвердить редактирование работника
 {
-    const worker_id = typeof $("#edit-worker-id").val() === 'string' ? $("#edit-worker-id").val().trim() : '';
-    const fullname = typeof $("#edit-worker-name").val() === 'string' ? $("#edit-worker-name").val().trim() : '';
-    const position = typeof $("#edit-worker-position").val() === 'string' ? $("#edit-worker-position").val().trim() : '';
-    const phone = typeof $("#edit-worker-phone").val() === 'string' ? $("#edit-worker-phone").val().trim() : '';
-    const email = typeof $("#edit-worker-email").val() === 'string' ? $("#edit-worker-email").val().trim() : '';
-
+    var worker_id = document.getElementById('edit-worker-id').value;
+    const name = typeof $('#edit-worker-name').val() === 'string' ? $('#edit-worker-name').val().trim() : '';
+    var positions = $('#edit-worker-positions option:selected').toArray().map(item => item.text).join();
+    console.log(positions);
+    const phone = typeof $('#edit-worker-phone').val() === 'string' ? $('#edit-worker-phone').val().trim() : '';
+    const email = typeof $('#edit-worker-email').val() === 'string' ? $('#edit-worker-email').val().trim() : '';
     if(worker_id == '')
     {
         $('#edit-worker-msg').html('<div class="alert alert-primary" role="alert">Нет ID работника</div>');
         return false;
     }
-    if(fullname == '')
+    if(name == '')
     {
         $('#edit-worker-msg').html('<div class="alert alert-primary" role="alert">Введите Ф.И.О. обязательно</div>');
         return false;
     }
-    if(position == '')
+    if(positions == '')
     {
         $('#edit-worker-msg').html('<div class="alert alert-primary" role="alert">Выберите должность обязательно</div>');
         return false;
     }
-
-    var params = 'id=' + worker_id + '&name=' + fullname + '&position=' + position;
-    if(phone != '') params += "&phone=" + encodeURIComponent(phone);
-    if(email != '') params += "&email=" + encodeURIComponent(email);
+    var params = 'i=' + worker_id + '&n=' + name + '&p=' + positions;
+    if(phone != '') params += '&t=' + encodeURIComponent(phone);
+    if(email != '') params += '&e=' + encodeURIComponent(email);
+    console.log(params);
 
     $.ajax ({
         type: 'POST',
@@ -653,25 +662,23 @@ $('#edit-worker-submit-btn').click(function(e) //подтвердить реда
         data: params,
         beforeSend: function()
         {
-            $('#edit-worker-submit-btn').attr("disabled","disabled");
+            $('#edit-worker-submit-btn').attr('disabled','disabled');
+            $('#edit-worker-delete-btn').attr('disabled','disabled');
             $('#edit-worker-modal-body').css('opacity', '.5');
-            $("#edit-worker-msg").html("");
+            $('#edit-worker-msg').html('');
         },
-        success: function(data)
+        success: function(responce)
         {
-            $('#edit-worker-submit-btn').removeAttr("disabled");
-            $('#edit-worker-modal-body').css('opacity', '');
-
-            if(data != '') $("#edit-worker-msg").html('<div class="alert alert-primary" role="alert">' + data +'</div>');
+            if(responce != '')  $('#edit-worker-msg').html('<div class="alert alert-primary" role="alert">' + responce +'</div>');
             else
             {
-                search(1);
+                workers(1);
                 $('#edit-worker-modal').modal('hide');
             }
         },
         error: function(xhr, status, error)
         {
-            $('#edit-worker-submit-btn').removeAttr("disabled");
+            $('#edit-worker-submit-btn').removeAttr('disabled');
             $('#edit-worker-modal-body').css('opacity', '');
             $('#edit-worker-msg').html('<div class="alert alert-primary" role="alert">' + xhr.status + ' ' + xhr.statusText +'</div>');
         }
@@ -680,62 +687,119 @@ $('#edit-worker-submit-btn').click(function(e) //подтвердить реда
 </script>
 
 <script>
-$('#call-worker-submit-btn').click(function(e) //подтвердить вызов работника
+$('#edit-worker-delete-btn').click(function(e) //подтвердить удаление работника через форму просмотра
 {
-    const call_time = document.querySelector('input[type="date"]').value;
-    const worker_id = typeof $("#call-worker-id").val() === 'string' ? $("#call-worker-id").val().trim() : '';
-    const place = typeof $("#call-worker-place").val() === 'string' ? $("#call-worker-place").val().trim() : '';
-    const issue = typeof $("#call-worker-text").val() === 'string' ? $("#call-worker-text").val().trim() : '';
-    //add notes
-
-    var urgent = 0;
-    if(document.getElementById('urgent').checked) urgent = 1;
-
-    if(call_time == '')
-    {
-        $('#call-worker-msg').html('<div class="alert alert-primary" role="alert">Назначьте дату</div>');
-        return false;
-    }
+    var worker_id = document.getElementById('edit-worker-id').value;
     if(worker_id == '')
     {
-        $('#call-worker-msg').html('<div class="alert alert-primary" role="alert">Нет ID работника</div>');
+        $('#edit-worker-msg').html('<div class="alert alert-primary" role="alert">Нет ID работника</div>');
+        return false;
+    }
+    $('#edit-worker-submit-btn').attr('disabled','disabled');
+    $('#edit-worker-cancek-btn').attr('disabled','disabled');
+    $('#edit-worker-modal-body').css('opacity', '.5');
+    if(delworker('i=' + worker_id, '#edit-worker-msg'))
+    {
+        $('#edit-worker-modal-body').css('opacity', '');
+        $('#edit-worker-modal').modal('hide');
+        workers(1);
+    }
+});
+</script>
+
+<script>
+$(document).ready(function() //для вставки информации в форму вызова работника
+{
+    $('#new-issue-modal').on('show.bs.modal', function(e)
+    {
+        var worker_id = $(e.relatedTarget).data('whatever');
+        $(e.currentTarget).find('input[id="new-issue-id"]').val(worker_id);
+
+        $('#new-issue-submit-btn').attr('disabled','disabled');
+        $('#new-issue-modal-body').css('opacity', '.5');
+        $('#new-issue-position').empty();
+
+        var worker = getworker(worker_id, '#new-issue-msg');
+        if(worker == '') return;
+
+        $(e.currentTarget).find('input[id="new-issue-name"]').val(worker[0]);
+
+        var positions = worker[1].split(', ');
+        for(p in positions) $('#new-issue-position').append('<option value=' + positions[p] + '>' + positions[p] + '</option>');
+
+        var curr_date = getdate();
+        const call_time = document.querySelector('input[id="new-issue-time"]');
+        call_time.value = curr_date[0]; call_time.min = curr_date[0]; call_time.max = curr_date[1];
+
+
+        $('#new-issue-submit-btn').removeAttr('disabled');
+        $('#new-issue-modal-body').css('opacity', '');
+    });
+});
+</script>
+
+<script>
+$('#new-issue-submit-btn').click(function(e) //подтвердить вызов работника
+{
+    var worker_id = document.getElementById('new-issue-id').value;
+    //const position = $('#new-issue-position option:selected').text();
+    var position = $('#new-issue-position option:selected').text();
+    const issue_time = document.querySelector('input[id="new-issue-time"]').value;
+    const place = typeof $('#new-issue-place').val() === 'string' ? $('#new-issue-place').val().trim() : '';
+    const issue = typeof $('#new-issue-text').val() === 'string' ? $('#new-issue-text').val().trim() : '';
+    var urgent = (document.getElementById('new-issue-urgent').checked) ? 1 : 0;
+
+    if(worker_id == '')
+    {
+        $('#new-issue-msg').html('<div class="alert alert-primary" role="alert">Нет ID работника</div>');
+        return false;
+    }
+    if(position == '')
+    {
+        $('#new-issue-msg').html('<div class="alert alert-primary" role="alert">Нет должности работника</div>');
+        return false;   
+    }
+    if(issue_time == '')
+    {
+        $('#new-issue-msg').html('<div class="alert alert-primary" role="alert">Назначьте дату вызова</div>');
         return false;
     }
     if(place == '')
     {
-        $('#call-worker-msg').html('<div class="alert alert-primary" role="alert">Напишите место вызова</div>');
+        $('#new-issue-msg').html('<div class="alert alert-primary" role="alert">Напишите место вызова</div>');
         return false;
     }
     if(issue == '')
     {
-        $('#call-worker-msg').html('<div class="alert alert-primary" role="alert">Напишите причину вызова</div>');
+        $('#new-issue-msg').html('<div class="alert alert-primary" role="alert">Напишите причину вызова</div>');
         return false;
     }
-
-    var params = 'id=' + worker_id + '&t=' + encodeURIComponent(call_time) + '&p=' + encodeURIComponent(place) + '&i=' + encodeURIComponent(issue);
+    var params = 'id=' + worker_id + '&o=' + position + '&t=' + encodeURIComponent(issue_time) + '&p=' + encodeURIComponent(place) + '&i=' + encodeURIComponent(issue);
     if (urgent) params += '&u=' + urgent;
+    console.log(params);
 
     $.ajax ({
         type: 'POST',
-        url: 'setcall.php',
+        url: 'newissue.php',
         data: params,
         beforeSend: function()
         {
-            $('#call-worker-submit-btn').attr("disabled","disabled");
-            $('#call-worker-modal-body').css('opacity', '.5');
-            $("#call-worker-msg").html("");
+            $('#new-issue-submit-btn').attr('disabled','disabled');
+            $('#new-issue-modal-body').css('opacity', '.5');
+            $('#new-issue-msg').html('');
         },
-        success: function(data)
+        success: function(responce)
         {
-            $('#call-worker-submit-btn').removeAttr("disabled");
-            $('#call-worker-modal-body').css('opacity', '');
-            if(data != '') $("#call-worker-msg").html('<div class="alert alert-primary" role="alert">' + data +'</div>');
+            $('#new-issue-submit-btn').removeAttr('disabled');
+            $('#new-issue-modal-body').css('opacity', '');
+            if(responce != '') $('#new-issue-msg').html('<div class="alert alert-primary" role="alert">' + responce +'</div>');
+            else $('#new-issue-modal').modal('hide');
         },
         error: function(xhr, status, error)
         {
-            $('#call-worker-submit-btn').removeAttr("disabled");
-            $('#call-worker-modal-body').css('opacity', '');
-            $('#call-worker-msg').html('<div class="alert alert-primary" role="alert">' + xhr.status + ' ' + xhr.statusText +'</div>');
+            $('#new-issue-submit-btn').removeAttr('disabled');
+            $('#new-issue-modal-body').css('opacity', '');
+            $('#new-issue-msg').html('<div class="alert alert-primary" role="alert">' + xhr.status + ' ' + xhr.statusText +'</div>');
         }
     });
 });

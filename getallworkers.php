@@ -2,7 +2,7 @@
 
 function getallworkers($db)
 {
-    $sel = 'SELECT * FROM workers ORDER BY fullname';
+    $sel = 'SELECT * FROM workers WHERE deleted = FALSE ORDER BY fullname';
 
     $res = pg_query($db, $sel);
     if($res)
@@ -27,7 +27,7 @@ function getallworkers($db)
     return;
 }
 
-require_once("connect.php");
+require_once('connect.php');
 session_start();
 
 if(isset($_SESSION['username']) && (time() - $_SESSION['timeout'] < 900))

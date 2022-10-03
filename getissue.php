@@ -4,7 +4,7 @@ function getissue($db, $id)
 {
     if($id == 0) return;
 
-    $sel = 'SELECT * FROM issues AS i JOIN workers AS w ON i.worker_id = w.worker_id WHERE i.issue_id=' . $id . '';
+    $sel = 'SELECT * FROM issues JOIN workers ON issues.worker_id = workers.worker_id WHERE issues.issue_id = ' . $id . ' AND issues.deleted = FALSE';
 
     $res = pg_query($db, $sel);
     if($res)
@@ -15,19 +15,20 @@ function getissue($db, $id)
             $issue = array();
             while($row = pg_fetch_row($res))
             {
-                $issue[] = $row[0];//id
+                $issue[] = $row[0];//issue_id
                 $issue[] = $row[1];//worker_id
                 $issue[] = $row[2];//status
-                $issue[] = $row[3];//creat time
-                $issue[] = $row[4];//mod time
-                $issue[] = $row[5];//issue date
-                $issue[] = $row[6];//place
-                $issue[] = $row[7];//issue
-                $issue[] = $row[8];//notes
-                $issue[] = $row[9];//urgent
-                //10=worker-id
-                $issue[] = $row[11];//fullname
-                $issue[] = $row[12];//position
+                $issue[] = $row[3];//position
+                $issue[] = $row[4];//create time
+                $issue[] = $row[5];//mod date
+                $issue[] = $row[6];//issue date
+                $issue[] = $row[7];//place
+                $issue[] = $row[8];//issue
+                $issue[] = $row[9];//notes
+                $issue[] = $row[10];//urgent
+                //11=deleted
+                //12=worker_id
+                $issue[] = $row[13];//fullname
             }
             if($issue) echo json_encode($issue);
         }
@@ -35,7 +36,8 @@ function getissue($db, $id)
     return;
 }
 
-require_once("connect.php");
+
+require_once('connect.php');
 session_start();
 
 if(isset($_SESSION['username']) && (time() - $_SESSION['timeout'] < 900))
@@ -50,7 +52,7 @@ else
     exit();
 }
 
-$id = isset($_POST['id']) && is_numeric($_POST['id']) ? $_POST['id']:0;
+$id = isset($_POST['i']) && is_numeric($_POST['i']) ? $_POST['i']:0;
 
 getissue($connection1, $id);
 ?>

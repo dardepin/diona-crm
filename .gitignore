@@ -1,3 +1,6 @@
 bak/
-other/
 *.zip
+
+!other
+other/*
+!other/db.sql

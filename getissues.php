@@ -58,11 +58,11 @@ else
     exit();
 }
 
-$p = isset($_POST['p']) && is_numeric($_POST['p']) ? $_POST['p']:0;
+$g = isset($_POST['g']) && is_numeric($_POST['g']) ? $_POST['g']:0;
 $q = isset($_POST['q']) && is_numeric($_POST['q']) ? $_POST['q']:15;
 $n = isset($_POST['n']) ? $_POST['n'] : '';
 $s = isset($_POST['s']) ? $_POST['s'] : '';
 if($s == 'Все статусы') $s = '';
 
-getissues($connection1, $p, $q, $n, $s);
+getissues($connection1, $g, $q, $n, $s);
 ?>

@@ -1,10 +1,16 @@
 <?php
 
-function search($db, $page, $lim, $begin, $name, $position)
+function searchworkers($db, $name, $position)
 {
-    $sel = 'SELECT COUNT(worker_id) AS total FROM workers WHERE deleted = FALSE ';
-    if ($name != '') $sel .= ' AND fullname ILIKE \'%' . $name . '%\'';
-    if ($position != '') $sel .= ' AND array[\'' . $position . '\']::positions[] <@ "current_positions"';
+    $sel = 'SELECT COUNT(worker_id) AS total FROM workers WHERE deleted = FALSE';
+
+    if($name != '')
+        $sel .= ' AND fullname ILIKE \'%' . $name . '%\'';
+    if($position != '')
+    {
+        if($position == 'Уволенные работники') $sel .= ' AND fired = TRUE';
+        else $sel .= ' AND array[\'' . $position . '\']::positions[] <@ "current_positions"';
+    }
 
     $res = pg_query($db, $sel);
     if($res)
@@ -12,10 +18,11 @@ function search($db, $page, $lim, $begin, $name, $position)
         $records = pg_fetch_assoc($res);
         return $records['total'];
     }
+
     return 0;
 }
 
-function gettotal($db, $page, $lim, $name, $position)
+function countworkers($db, $page, $lim, $name, $position)
 {
     $total = array();
 
@@ -28,7 +35,7 @@ function gettotal($db, $page, $lim, $name, $position)
     {
         $records = pg_fetch_assoc($res);
         $total[] = $records['total']; //всего записей
-        $total[] = search($db, $page, $lim, $begin, $name, $position); //найдено записей
+        $total[] = searchworkers($db, $name, $position); //найдено записей
 
         $pages = ceil($total[1] / $lim);
         $total[] = ($pages == 0)?1:$pages; //найдено страниц
@@ -51,16 +58,15 @@ if(isset($_SESSION['username']) && (time() - $_SESSION['timeout'] < 900))
 else
 {
     session_destroy();
-    header('Location: login.php?r=positions');
+    header('Location: login.php?r=workers');
     exit();
 }
 
-$p = isset($_POST['p']) && is_numeric($_POST['p']) ? $_POST['p']:0;
+$g = isset($_POST['g']) && is_numeric($_POST['g']) ? $_POST['g']:0;
 $q = isset($_POST['q']) && is_numeric($_POST['q']) ? $_POST['q']:15;
 if(isset($_POST['n'])) $n = $_POST['n']; else $n = '';
-if(isset($_POST['s'])) $s = $_POST['s']; else $s = ''; // position
-if($s == 'Все должности') $s = '';
+if(isset($_POST['o'])) $o = $_POST['o']; else $o = ''; //position
+if($o == 'Все должности') $o = '';
 
-gettotal($connection1, $p, $q, $n, $s);
-
+countworkers($connection1, $g, $q, $n, $o);
 ?>

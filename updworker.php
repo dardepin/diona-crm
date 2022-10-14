@@ -1,24 +1,51 @@
 <?php
-function is_exists($db, $id, $name, $positions, $phone, $email)
+
+function worker_exists($db, $id, $name, $positions) //проверить, есть ли работник с другим id, но с такими же должностями.
 {
-    $sel = 'SELECT * FROM workers WHERE worker_id = \'' . $id . '\' AND fullname = \'' . $name . '\' AND current_positions =  \'{' . $positions . '}\' AND phone = \'' . $phone . '\' AND email = \'' . $email . '\'';
+    $allpositions = explode(',', $positions);
+    foreach($allpositions as $position)
+    {
+        $sel = 'SELECT COUNT(worker_id) AS total FROM workers WHERE worker_id != \'' . $id . '\' AND fullname = \'' . $name . '\' AND deleted = FALSE AND array[\'' . $position . '\']::positions[] <@ "current_positions"';
+
+        $res = pg_query($db, $sel);
+        if($res)
+        {
+            $records = pg_fetch_assoc($res);
+            if($records['total'] == 0) continue;
+            else { echo 'nupdworker: сотрудник уже существует'; return FALSE; }
+        }
+        else { echo 'updworker: Ошибка БД #1: ' . pg_last_error($db); return FALSE; }
+    }
+    return TRUE;
+}
+
+function tasks_exists($db, $id) //проверяет, есть ли задачи до удаления работника. если есть, то можно только уволить
+{
+    $sel = 'SELECT COUNT(worker_id) AS total FROM issues WHERE worker_id = \'' . $id . '\'';
 
     $res = pg_query($db, $sel);
     if($res)
     {
-        $total = pg_numrows($res);
-        if($total != 0) return TRUE;
-    } else echo 'updworker: Ошибка БД #2: ' . pg_last_error($db);
-    return FALSE;
+        $records = pg_fetch_assoc($res);
+        if($records['total'] > 0) echo 'updworker: Невозможно удалить работника, у него есть задачи';
+        else return 0;
+    }
+    else echo 'updworker: Ошибка БД #2: ' . pg_last_error($db);
+    return 1;
 }
 
-function updworker($db, $id, $name, $positions, $phone, $email)
+function updworker($db, $id, $name, $positions, $phone, $email, $fired, $deleted)
 {
-    if(is_exists($db, $id, $name, $positions, $phone, $email)) return;//ok
-    $upd = 'UPDATE workers SET fullname = \'' . $name . '\', current_positions = \'{' . $positions . '}\', phone = \'' . $phone . '\', email = \'' . $email .  '\' WHERE worker_id = \'' . $id . '\'';
+
+    if(($deleted == TRUE) && (tasks_exists($db, $id))) return;
+    if(!worker_exists($db, $id, $name, $positions)) return;
+
+    $upd = 'UPDATE workers SET fullname = \'' . $name . '\', current_positions = \'{' . $positions . '}\', phone = \'' . $phone . '\', email = \'' . $email .  '\', fired = \'' . $fired . '\', deleted = \'' . $deleted . '\' WHERE worker_id = \'' . $id . '\'';
 
     $res = pg_query($db, $upd);
-    if(!$res) echo 'updworker: Ошибка БД #1: ' . pg_last_error($db);
+    if(!$res) echo 'updissue: Ошибка БД #3: ' . pg_last_error($db);
+    return;
+
     return;
 }
 
@@ -37,17 +64,20 @@ else
     exit();
 }
 
-$phone = ''; $email = '';
 
-if(isset($_POST['n']) && isset($_POST['p'])  && isset($_POST['i']))
+if(isset($_POST['n']) && isset($_POST['o'])  && isset($_POST['i']))
 {
     $id = $_POST['i'];
     $name = $_POST['n'];
-    $positions = $_POST['p'];
-    if(isset($_POST['t'])) $phone = $_POST['t'];
-    if(isset($_POST['e'])) $email = $_POST['e'];
+    $positions = $_POST['o'];
+    $phone = (isset($_POST['t'])) ? $_POST['t'] : '';
+    $email = (isset($_POST['e'])) ? $_POST['e'] : '';
+    /*if(isset($_POST['f'])) $fired = $_POST['f'];
+    if(isset($_POST['d'])) $deleted = $_POST['d'];*/
+    $fired = (isset($_POST['f']) && is_numeric($_POST['f'])) ? $_POST['f']:0;
+    $deleted = (isset($_POST['d']) && is_numeric($_POST['d'])) ? $_POST['d']:0;
 
-    updworker($connection1, $id, $name, $positions, $phone, $email);
+    updworker($connection1, $id, $name, $positions, $phone, $email, $fired, $deleted);
 } else echo 'updworker: Нет id, имени или должности';
 
 ?>

@@ -3,7 +3,7 @@
 function getworker($db, $id)
 {
     if($id == 0) return;
-    $sel = 'SELECT * FROM workers WHERE worker_id=' . $id . ' AND deleted = FALSE';
+    $sel = 'SELECT * FROM workers WHERE worker_id = \'' . $id . '\' AND deleted = FALSE';
 
     $res = pg_query($db, $sel);
     if($res)
@@ -18,7 +18,8 @@ function getworker($db, $id)
                 $worker[] = str_replace(',', ', ', str_replace('"', '', trim($row[2], '{}')));//positions
                 $worker[] = $row[3];//phone
                 $worker[] = $row[4];//email
-                $worker[] = $row[5];//created
+                $worker[] = $row[6];//fired
+                $worker[] = $row[7];//deleted
             }
             if($worker) echo json_encode($worker);
         }

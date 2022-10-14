@@ -29,13 +29,14 @@ function getissue($db, $id)
                 //11=deleted
                 //12=worker_id
                 $issue[] = $row[13];//fullname
+                $issue[] = $row[18];//fired
+                $issue[] = $row[19];//deleted
             }
             if($issue) echo json_encode($issue);
         }
     }
     return;
 }
-
 
 require_once('connect.php');
 session_start();

@@ -1,6 +1,6 @@
 <?php
 
-function search($db, $page, $lim, $begin, $name, $status)
+function searchissues($db, $page, $lim, $begin, $name, $status)
 {
     $sel = 'SELECT COUNT(issue_id) AS total FROM issues INNER JOIN workers ON issues.worker_id = workers.worker_id WHERE issues.deleted = FALSE';
     if ($status != '') $sel .= ' AND issues.status = \'' . $status . '\'';
@@ -15,7 +15,7 @@ function search($db, $page, $lim, $begin, $name, $status)
     return 0;
 }
 
-function gettotal($db, $page, $lim, $name, $status)
+function countissues($db, $page, $lim, $name, $status)
 {
     $total = array();
 
@@ -28,7 +28,7 @@ function gettotal($db, $page, $lim, $name, $status)
     {
         $records = pg_fetch_assoc($res);
         $total[] = $records['total']; //всего записей
-        $total[] = search($db, $page, $lim, $begin, $name, $status); //найдено записей
+        $total[] = searchissues($db, $page, $lim, $begin, $name, $status); //найдено записей
 
         $pages = ceil($total[1] / $lim);
         $total[] = ($pages == 0)?1:$pages; //найдено страниц
@@ -54,12 +54,12 @@ else
     exit();
 }
 
-$p = isset($_POST['p']) && is_numeric($_POST['p']) ? $_POST['p']:0;
+$g = isset($_POST['g']) && is_numeric($_POST['g']) ? $_POST['g']:0;
 $q = isset($_POST['q']) && is_numeric($_POST['q']) ? $_POST['q']:15;
 $n = isset($_POST['n']) ? $_POST['n'] : ''; // name
 $s = isset($_POST['s']) ? $_POST['s'] : ''; // status
 if($s == 'Все статусы') $s = '';
 
-gettotal($connection1, $p, $q, $n, $s);
+countissues($connection1, $g, $q, $n, $s);
 
 ?>

@@ -199,7 +199,7 @@ function getpositions(params, msg) // возвращает список пози
 <script> 
 function positions(page) // поиск и отображение должностей по параметрам
 {
-    var search_position = document.getElementById('search-position').value;
+    var search_position = $('#search-position').val();
     var q = $('#select-per-page').val();
 
     if(!Number.isInteger(page)) page = parseInt(page);
@@ -212,8 +212,8 @@ function positions(page) // поиск и отображение должнос�
     var positions = getpositions(params, '#positions-msg');
 
     if(pages == '') return;
-    document.getElementById('positions-pages').innerHTML = '';
-    document.getElementById('positions-table').innerHTML = '';
+    $('#positions-pages').html('');
+    $('#positions-table').html('');
 
     var allpositions = pages[0]; 
     if(allpositions == 0)
@@ -227,8 +227,8 @@ function positions(page) // поиск и отображение должнос�
     
     for (let i = 1; i <= totalpages; i++)
     {
-        if(i === currentpage) document.getElementById('positions-pages').innerHTML += '<li class=\"page-item active\" aria-current=\"page\"><span class=\"page-link\">' + i + '</span></li>';
-        else document.getElementById('positions-pages').innerHTML += '<li onclick=\"positions(this.id)\" class=\"page-item\" id=\"' + i + '\"><a class=\"page-link\" >' + i + '</a></li>';
+        if(i === currentpage) $('#positions-pages').append('<li class=\"page-item active\" aria-current=\"page\"><span class=\"page-link\">' + i + '</span></li>');
+        else $('positions-pages').append('<li onclick=\"positions(this.id)\" class=\"page-item\" id=\"' + i + '\"><a class=\"page-link\" >' + i + '</a></li>');
     }
 
     if(positions == '') return;
@@ -246,14 +246,14 @@ function positions(page) // поиск и отображение должнос�
         table += '<tr><td scope=\"row\">' + positions[p] + '</td>' + editbutton + '</tr>';
     }
     table += '</tbody></table><br><br>';
-    document.getElementById('positions-table').innerHTML = table;
+    $('#positions-table').html(table);
 }
 </script>
 
 <script>
 $('#new-position-btn').click(function() //при нажатии на кнопку "создать должность"
 {
-    var new_position_modal = new bootstrap.Modal(document.getElementById('new-position-modal'));
+    var new_position_modal = new bootstrap.Modal($('#new-position-modal'));
     new_position_modal.show();
 });
 </script>

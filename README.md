@@ -3,7 +3,8 @@ For GIT (Github) testing only! Simple two-page crm to track your staff's work.
 ## Current Releases
 0.1 - Initial Commit <br />
 0.2 - Some improvements <br />
-## Platforms
+0.3 - Improvemnts and fisexes <br />
+# Platforms
 Tested on Debian 11 with pre-installed:
 - postgresql-14
 - nginx 1.18
